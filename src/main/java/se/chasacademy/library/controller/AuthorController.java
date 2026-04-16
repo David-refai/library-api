@@ -81,4 +81,52 @@ public class AuthorController {
         List<BookResponse> books = authorService.getBooksByAuthorId(id);
         return ResponseEntity.ok(books);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AuthorResponse> updateAuthor(@PathVariable Long id, @Valid @RequestBody AuthorRequest request) {
+        AuthorResponse response = authorService.updateAuthor(id, request);
+        return ResponseEntity.ok(response);
+    }
 }
+
+
+
+// example curl commands:
+// Create an author:
+// curl -X POST http://localhost:8080/api/v1/authors \
+//      -H "Content-Type: application/json" \
+//      -d '{"name": "J.K. Rowling"}'
+// Get an author by ID:
+// curl http://localhost:8080/api/v1/authors/1
+// Get all books by an author:
+// curl http://localhost:8080/api/v1/authors/1/books
+//! example JSON request body for POST /api/v1/authors
+//!{
+//!  "name": "J.K. Rowling"
+//!}
+//!
+//! example JSON response for GET /api/v1/authors/1
+//!{
+//!  "id": 1,
+//!  "name": "J.K. Rowling"
+//!}
+//!! example JSON response for GET /api/v1/authors/1/books
+//![!  {
+//!    "id": 1,
+//!    "title": "Harry Potter and the Sorcerer's Stone",
+//!    "publicationYear": 1997,
+//!    "author": {
+//!      "id": 1,
+//!      "name": "J.K. Rowling"
+//!    }
+//!  },
+//!  {
+//!    "id": 2,
+//!    "title": "Harry Potter and the Chamber of Secrets",
+//!    "publicationYear": 1998,
+//!    "author": {
+//!      "id": 1,
+//!      "name": "J.K. Rowling"
+//!    }
+//!  }
+//!]

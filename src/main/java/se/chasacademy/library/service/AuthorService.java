@@ -9,6 +9,7 @@ import se.chasacademy.library.exception.AuthorNotFoundException;
 import se.chasacademy.library.repository.AuthorRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service layer for all Author business logic.
@@ -62,6 +63,27 @@ public class AuthorService {
                 ))
                 .toList();
     }
+
+
+//     uppdateAuthor() and deleteAuthor()
+    public AuthorResponse updateAuthor(Long id, AuthorRequest request) {
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new AuthorNotFoundException(id));
+
+        author.setName(request.getName());
+        Author updated = authorRepository.save(author);
+        return toResponse(updated);
+    }
+
+    public void deleteAuthor(Long id) {
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new AuthorNotFoundException(id));
+        authorRepository.delete(author);
+    }
+
+
+
+
 
     // ── Private Mapping Helpers ───────────────────────────────────────────────
 
