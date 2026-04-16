@@ -16,7 +16,7 @@
     <artifactId>library-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>library-api</name>
-    <description>Library API - ChasAcademy Week 2</description>
+    <description>Library API - ChasAcademy</description>
 
     <properties>
         <java.version>21</java.version>
