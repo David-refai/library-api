@@ -46,7 +46,7 @@ Once the application is running, navigate directly to:
 👉 **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
 
 Or fetch the raw `JSON` spec via:
-👉 **[http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)**
+👉 **[http://localhost:8080/api-docs](http://localhost:8080/api-docs)**
 
 ---
 
