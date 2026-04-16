@@ -100,6 +100,18 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles NoResourceFoundException → HTTP 404 Not Found.
+     * Prevents 404 mapping errors (like hitting /v3/api-docs when it's mapped to /api-docs)
+     * from being swallowed by the generic Exception handler and returning 500.
+     */
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiError> handleNoResourceFound(
+            org.springframework.web.servlet.resource.NoResourceFoundException ex, HttpServletRequest request) {
+
+        return buildError(HttpStatus.NOT_FOUND, "The requested endpoint or resource was not found.", request);
+    }
+
+    /**
      * Catch-all handler for any unexpected exception → HTTP 500.
      * Ensures stack traces never leak to API consumers.
      */
