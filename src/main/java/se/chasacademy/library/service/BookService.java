@@ -4,8 +4,11 @@ import org.springframework.stereotype.Service;
 import se.chasacademy.library.dto.request.BookRequest;
 import se.chasacademy.library.dto.response.BookResponse;
 import se.chasacademy.library.dto.response.BookResponseV2;
+import se.chasacademy.library.entity.Author;
 import se.chasacademy.library.entity.Book;
+import se.chasacademy.library.exception.AuthorNotFoundException;
 import se.chasacademy.library.exception.BookNotFoundException;
+import se.chasacademy.library.repository.AuthorRepository;
 import se.chasacademy.library.repository.BookRepository;
 
 import java.util.List;
@@ -19,27 +22,28 @@ import java.util.List;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final AuthorRepository authorRepository;
 
-    public BookService(BookRepository bookRepository) {
+    public BookService(BookRepository bookRepository, AuthorRepository authorRepository) {
         this.bookRepository = bookRepository;
+        this.authorRepository = authorRepository;
     }
 
     /**
-     * Creates and persists a new Book from the given request DTO.
-     *
-     * @param request the BookRequest DTO received from the controller
-     * @return a BookResponse DTO representing the saved book
+     * Creates and persists a new Book.
+     * Looks up the Author by authorId — throws AuthorNotFoundException if not found.
      */
     public BookResponse createBook(BookRequest request) {
-        Book book = new Book(request.getTitle(), request.getAuthor());
+        Author author = authorRepository.findById(request.getAuthorId())
+                .orElseThrow(() -> new AuthorNotFoundException(request.getAuthorId()));
+
+        Book book = new Book(request.getTitle(), author);
         Book saved = bookRepository.save(book);
         return toResponse(saved);
     }
 
     /**
      * Retrieves all books from the database.
-     *
-     * @return list of BookResponse DTOs
      */
     public List<BookResponse> getAllBooks() {
         return bookRepository.findAll()
@@ -51,8 +55,6 @@ public class BookService {
     /**
      * Retrieves a single book by ID.
      *
-     * @param id the ID of the book
-     * @return a BookResponse DTO
      * @throws BookNotFoundException if no book with the given ID exists
      */
     public BookResponse getBookById(Long id) {
@@ -63,8 +65,6 @@ public class BookService {
 
     /**
      * Retrieves all books as v2 DTOs (includes 'available' field).
-     *
-     * @return list of BookResponseV2 DTOs
      */
     public List<BookResponseV2> getAllBooksV2() {
         return bookRepository.findAll()
@@ -76,10 +76,21 @@ public class BookService {
     // ── Private Mapping Helpers ───────────────────────────────────────────────
 
     private BookResponse toResponse(Book book) {
-        return new BookResponse(book.getId(), book.getTitle(), book.getAuthor());
+        return new BookResponse(
+                book.getId(),
+                book.getTitle(),
+                book.getAuthor().getName(),
+                book.getAuthor().getId()
+        );
     }
 
     private BookResponseV2 toResponseV2(Book book) {
-        return new BookResponseV2(book.getId(), book.getTitle(), book.getAuthor(), book.isAvailable());
+        return new BookResponseV2(
+                book.getId(),
+                book.getTitle(),
+                book.getAuthor().getName(),
+                book.getAuthor().getId(),
+                book.isAvailable()
+        );
     }
 }
