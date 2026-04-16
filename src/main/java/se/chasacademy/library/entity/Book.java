@@ -21,6 +21,10 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Optimistic locking for concurrency control (Vecka 7)
+    @Version
+    private Integer version;
+
     @Column(nullable = false)
     private String title;
 

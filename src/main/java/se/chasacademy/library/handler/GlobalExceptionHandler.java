@@ -66,7 +66,21 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleDataIntegrityViolation(
             DataIntegrityViolationException ex, HttpServletRequest request) {
 
-        return buildError(HttpStatus.CONFLICT, "Book is already on loan", request);
+        return buildError(HttpStatus.CONFLICT, "Book is already on loan (Data Integrity Violation)", request);
+    }
+
+    /**
+     * Handles ObjectOptimisticLockingFailureException → HTTP 409 Conflict.
+     *
+     * Vecka 7: This fires when Optimistic Locking (@Version) catches two concurrent 
+     * threads trying to update the same Book entity at the same time.
+     * The first thread wins, the second throws this exception.
+     */
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleOptimisticLockingFailure(
+            org.springframework.orm.ObjectOptimisticLockingFailureException ex, HttpServletRequest request) {
+
+        return buildError(HttpStatus.CONFLICT, "Book is already on loan (Optimistic Lock Failure)", request);
     }
 
     /**

@@ -33,26 +33,29 @@ public class LoanService {
     /**
      * Creates a new loan for the given bookId.
      *
-     * @Transactional ensures the check-and-save operation is atomic.
-     * Without this, two concurrent requests could both pass the "already on loan" check
-     * and both create a loan — a classic race condition.
-     *
-     * With @Transactional, the database transaction is held open for the duration of this method,
-     * and the unique constraint on book_id in the loans table acts as a final safety net.
+     * @Transactional combined with @Version on Book (Optimistic Locking)
+     * ensures thread-safety without heavy database locks.
+     * When concurrent requests try to check out the same book, they will
+     * both read version V. The first to commit updates version to V+1.
+     * The second one will fail with ObjectOptimisticLockingFailureException.
      *
      * @throws BookNotFoundException      if no book with the given ID exists
-     * @throws BookAlreadyOnLoanException if the book is already on loan
+     * @throws BookAlreadyOnLoanException if the book is already marked as not available
      */
     @Transactional
     public LoanResponse createLoan(LoanRequest request) {
         Book book = bookRepository.findById(request.getBookId())
                 .orElseThrow(() -> new BookNotFoundException(request.getBookId()));
 
-        // Business rule: reject if an active loan already exists for this book
-        boolean alreadyOnLoan = loanRepository.findByBookId(book.getId()).isPresent();
-        if (alreadyOnLoan) {
+        // Business rule: reject if book is not available
+        if (!book.isAvailable()) {
             throw new BookAlreadyOnLoanException(book.getId());
         }
+
+        // Mark book as unavailable. This updates the Book entity, 
+        // triggering the @Version optimistic lock!
+        book.setAvailable(false);
+        bookRepository.save(book);
 
         Loan loan = new Loan(book);
         Loan saved = loanRepository.save(loan);
