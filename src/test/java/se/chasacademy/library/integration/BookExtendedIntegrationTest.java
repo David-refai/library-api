@@ -38,6 +38,7 @@ class BookExtendedIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        restTemplate = restTemplate.withBasicAuth("admin", "password");
         loanRepository.deleteAll();
         bookRepository.deleteAll();
         authorRepository.deleteAll();
