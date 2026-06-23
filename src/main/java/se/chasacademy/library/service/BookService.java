@@ -1,5 +1,10 @@
 package se.chasacademy.library.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import se.chasacademy.library.dto.request.BookRequest;
 import se.chasacademy.library.dto.response.BookResponse;
@@ -33,6 +38,7 @@ public class BookService {
      * Creates and persists a new Book.
      * Looks up the Author by authorId — throws AuthorNotFoundException if not found.
      */
+    @CacheEvict(value = {"books", "booksV2"}, allEntries = true)
     public BookResponse createBook(BookRequest request) {
         Author author = authorRepository.findById(request.getAuthorId())
                 .orElseThrow(() -> new AuthorNotFoundException(request.getAuthorId()));
@@ -57,6 +63,7 @@ public class BookService {
      *
      * @throws BookNotFoundException if no book with the given ID exists
      */
+    @Cacheable(value = "books", key = "#id")
     public BookResponse getBookById(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new BookNotFoundException(id));
@@ -66,12 +73,30 @@ public class BookService {
     /**
      * Retrieves all books as v2 DTOs (includes 'available' field).
      */
-    public List<BookResponseV2> getAllBooksV2() {
-        return bookRepository.findAll()
-                .stream()
-                .map(this::toResponseV2)
-                .toList();
+    @Cacheable(value = "booksV2", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
+    public Page<BookResponseV2> getAllBooksV2(Pageable pageable) {
+        return bookRepository.findAll(pageable)
+                .map(this::toResponseV2);
     }
+
+    /**
+     * Simulates an external API call to fetch book metadata.
+     * Protected by Resilience4j Circuit Breaker.
+     */
+    @CircuitBreaker(name = "bookMetadataService", fallbackMethod = "fallbackForMetadata")
+    public String getBookMetadata(Long id) {
+        // Simulate a network failure 30% of the time
+        if (Math.random() < 0.3) {
+            throw new RuntimeException("External Metadata Service is down");
+        }
+        return "Comprehensive metadata for book ID " + id + " fetched from external source.";
+    }
+
+    public String fallbackForMetadata(Long id, Throwable t) {
+        return "Metadata temporarily unavailable. Please try again later. (Reason: " + t.getMessage() + ")";
+    }
+
+
 
     // ── Private Mapping Helpers ───────────────────────────────────────────────
 
