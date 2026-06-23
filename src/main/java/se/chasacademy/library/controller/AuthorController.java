@@ -34,6 +34,11 @@ public class AuthorController {
         this.authorService = authorService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<AuthorResponse>> getAllAuthors() {
+        return ResponseEntity.ok(authorService.getAllAuthors());
+    }
+
     // ── POST /api/v1/authors ──────────────────────────────────────────────────
 
     @Operation(summary = "Create a new author",

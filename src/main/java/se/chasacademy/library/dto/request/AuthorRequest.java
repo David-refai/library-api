@@ -2,6 +2,7 @@ package se.chasacademy.library.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * DTO for creating a new Author.
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 public class AuthorRequest {
 
     @NotBlank(message = "Author name must not be blank")
+    @Size(min = 2, max = 50, message = "Author name must be between 2 and 50 characters")
     @Schema(description = "Full name of the author", example = "Robert C. Martin", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 

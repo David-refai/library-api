@@ -45,9 +45,15 @@ public class BookControllerV2 {
                     content = @Content(schema = @Schema(implementation = PagedResponseV2.class)))
     })
     @GetMapping
-    public ResponseEntity<PagedResponseV2<BookResponseV2>> getAllBooks() {
-        List<BookResponseV2> books = bookService.getAllBooksV2();
-        PagedResponseV2<BookResponseV2> response = new PagedResponseV2<>(books, "v2");
+    public ResponseEntity<PagedResponseV2<BookResponseV2>> getAllBooks(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<BookResponseV2> bookPage = bookService.getAllBooksV2(pageable);
+        PagedResponseV2<BookResponseV2> response = new PagedResponseV2<>(bookPage, "v2");
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/{id}/metadata")
+    @Operation(summary = "Get book metadata (Simulated external call with Circuit Breaker)")
+    public ResponseEntity<String> getBookMetadata(@PathVariable Long id) {
+        return ResponseEntity.ok(bookService.getBookMetadata(id));
     }
 }

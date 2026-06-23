@@ -10,6 +10,7 @@ import se.chasacademy.library.repository.AuthorRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service layer for all Author business logic.
@@ -22,6 +23,13 @@ public class AuthorService {
 
     public AuthorService(AuthorRepository authorRepository) {
         this.authorRepository = authorRepository;
+    }
+
+    public List<AuthorResponse> getAllAuthors() {
+        return authorRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     /**

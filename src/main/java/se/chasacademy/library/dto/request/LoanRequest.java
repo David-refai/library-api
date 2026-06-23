@@ -1,6 +1,7 @@
 package se.chasacademy.library.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.NotNull;
 public class LoanRequest {
 
     @NotNull(message = "Book ID must not be null")
+    @Min(value = 1, message = "Book ID must be at least 1")
     @Schema(description = "ID of the book to loan", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long bookId;
 

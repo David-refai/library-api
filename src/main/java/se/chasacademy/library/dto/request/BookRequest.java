@@ -1,8 +1,10 @@
 package se.chasacademy.library.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * DTO for creating a new Book.
@@ -14,10 +16,12 @@ import jakarta.validation.constraints.NotNull;
 public class BookRequest {
 
     @NotBlank(message = "Title must not be blank")
+    @Size(min = 2, max = 100, message = "Title must be between 2 and 100 characters")
     @Schema(description = "Title of the book", example = "Clean Code", requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
 
     @NotNull(message = "Author ID must not be null")
+    @Min(value = 1, message = "Author ID must be at least 1")
     @Schema(description = "ID of the existing Author to associate with this book", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long authorId;
 
