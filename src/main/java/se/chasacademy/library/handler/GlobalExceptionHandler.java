@@ -100,6 +100,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles failed login attempts (bad username/password) → HTTP 401 Unauthorized.
+     * Thrown by AuthenticationManager.authenticate(...) in AuthController.
+     */
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthenticationException(
+            org.springframework.security.core.AuthenticationException ex, HttpServletRequest request) {
+
+        return buildError(HttpStatus.UNAUTHORIZED, "Invalid username or password", request);
+    }
+
+    /**
      * Handles NoResourceFoundException → HTTP 404 Not Found.
      * Prevents 404 mapping errors (like hitting /v3/api-docs when it's mapped to /api-docs)
      * from being swallowed by the generic Exception handler and returning 500.
