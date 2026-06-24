@@ -16,6 +16,7 @@ import se.chasacademy.library.dto.response.BookResponse;
 import se.chasacademy.library.repository.AuthorRepository;
 import se.chasacademy.library.repository.BookRepository;
 import se.chasacademy.library.repository.LoanRepository;
+import se.chasacademy.library.integration.support.JwtTestSupport;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -40,7 +41,7 @@ class ConcurrencyVecka7Test {
 
     @BeforeEach
     void setUp() {
-        restTemplate = restTemplate.withBasicAuth("admin", "password");
+        restTemplate = JwtTestSupport.withJwtAuth(restTemplate, "admin", "admin-changeit");
         loanRepository.deleteAll();
         bookRepository.deleteAll();
         authorRepository.deleteAll();

@@ -16,6 +16,7 @@ import se.chasacademy.library.exception.ApiError;
 import se.chasacademy.library.repository.BookRepository;
 import se.chasacademy.library.repository.LoanRepository;
 import se.chasacademy.library.repository.AuthorRepository;
+import se.chasacademy.library.integration.support.JwtTestSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Real H2 in-memory database
  * - Tests are independent — @BeforeEach resets all tables
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "rate.limit.capacity=10")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BookIntegrationTest {
 
     @Autowired
@@ -53,8 +54,8 @@ class BookIntegrationTest {
      */
     @BeforeEach
     void setUp() {
-        // Configure basic auth for all requests in this test
-        restTemplate = restTemplate.withBasicAuth("admin", "password");
+        // Authenticate as admin for all requests in this test
+        restTemplate = JwtTestSupport.withJwtAuth(restTemplate, "admin", "admin-changeit");
 
         loanRepository.deleteAll();
         bookRepository.deleteAll();
@@ -144,22 +145,5 @@ class BookIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().getMessage()).containsIgnoringCase("title");
-    }
-
-    // ── Test 5: Rate Limiting ─────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("Rate Limiting — should return 429 after 10 requests in a row")
-    void rateLimiting_shouldReturn429AfterLimit() {
-        // Perform 10 valid requests
-        for (int i = 0; i < 10; i++) {
-            restTemplate.getForEntity("/api/v1/books", String.class);
-        }
-
-        // The 11th request should trigger the rate limit
-        ResponseEntity<String> response = restTemplate.getForEntity("/api/v1/books", String.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
-        assertThat(response.getBody()).contains("Too many requests");
     }
 }

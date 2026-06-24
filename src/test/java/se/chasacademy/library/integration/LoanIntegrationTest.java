@@ -18,6 +18,7 @@ import se.chasacademy.library.exception.ApiError;
 import se.chasacademy.library.repository.AuthorRepository;
 import se.chasacademy.library.repository.BookRepository;
 import se.chasacademy.library.repository.LoanRepository;
+import se.chasacademy.library.integration.support.JwtTestSupport;
 
 import java.time.LocalDate;
 
@@ -45,7 +46,7 @@ class LoanIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        restTemplate = restTemplate.withBasicAuth("admin", "password");
+        restTemplate = JwtTestSupport.withJwtAuth(restTemplate, "admin", "admin-changeit");
         loanRepository.deleteAll();
         bookRepository.deleteAll();
         authorRepository.deleteAll();
