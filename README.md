@@ -34,7 +34,7 @@ You can simply run the API using Maven:
 cd library-api
 mvn spring-boot:run
 ```
-The server binds to `http://localhost:8080/`.
+The server binds to `http://localhost:7070/`.
 
 ---
 
@@ -43,10 +43,85 @@ The server binds to `http://localhost:8080/`.
 The API is fully documented using **SpringDoc OpenAPI**. You easily explore, test and interact with the endpoints dynamically using the Swagger UI view.
 
 Once the application is running, navigate directly to:
-👉 **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
+👉 **[http://localhost:7070/swagger-ui.html](http://localhost:7070/swagger-ui.html)**
 
 Or fetch the raw `JSON` spec via:
-👉 **[http://localhost:8080/api-docs](http://localhost:8080/api-docs)**
+👉 **[http://localhost:7070/api-docs](http://localhost:7070/api-docs)**
+
+---
+
+## 🔐 Security — JWT Authentication & Roles
+
+The API requires authentication on every `/api/**` endpoint. There are two built-in accounts:
+
+| Username | Role  | Can do |
+|----------|-------|--------|
+| `admin`  | ADMIN | Read + create/update/delete (POST/PUT/PATCH/DELETE) |
+| `user`   | USER  | Read only (GET) |
+
+Credentials and the JWT signing secret are read from environment variables (see table below) — they are **not** hardcoded. Local defaults exist only so the app can start without extra setup.
+
+**1. Log in to obtain a token:**
+```bash
+curl -X POST http://localhost:7070/api/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username": "admin", "password": "admin-changeit"}'
+```
+Response:
+```json
+{ "token": "<jwt>", "expiresInMs": 3600000 }
+```
+
+**2. Call a protected endpoint with the token:**
+```bash
+curl http://localhost:7070/api/v1/books \
+     -H "Authorization: Bearer <jwt>"
+```
+
+| Environment variable | Purpose | Local default |
+|---|---|---|
+| `JWT_SECRET` | Signing key for issued tokens | dev-only fallback (override in any real deployment) |
+| `JWT_EXPIRATION_MS` | Token lifetime | `3600000` (1 hour) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Admin account | `admin` / `admin-changeit` |
+| `USER_USERNAME` / `USER_PASSWORD` | Read-only account | `user` / `user-changeit` |
+
+See [SECURITY_REPORT.md](SECURITY_REPORT.md) for the full OWASP Top 10 analysis behind these controls.
+
+---
+
+## 🐳 Run with Docker
+
+The app ships with a multi-stage `Dockerfile` — no local Java installation needed.
+
+```bash
+docker build -t library-api .
+
+docker run -p 7070:7070 \
+  -e JWT_SECRET=replace-with-a-long-random-secret \
+  -e ADMIN_PASSWORD=replace-with-a-strong-password \
+  -e USER_PASSWORD=replace-with-a-strong-password \
+  library-api
+```
+
+---
+
+## ⚙️ CI/CD Pipeline
+
+`.github/workflows/ci-cd-pipeline.yml` runs on every push/PR to `main`:
+
+1. **build-and-test** — runs `mvn test`.
+2. **dependency-check** — runs OWASP Dependency-Check; fails the pipeline on any High/Critical (CVSS ≥ 7) vulnerability.
+3. **docker-build-push** *(push to `main` only)* — builds the image and pushes `:latest` and `:<sha>` to Docker Hub.
+4. **deploy** *(push to `main` only)* — fully automated deployment step.
+
+To enable steps 3–4, add these **Repository Secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Required | Purpose |
+|---|---|---|
+| `DOCKERHUB_USERNAME` | Yes | Docker Hub login |
+| `DOCKERHUB_TOKEN` | Yes | Docker Hub access token (not your password) |
+| `NVD_API_KEY` | Optional | Speeds up the OWASP Dependency-Check NVD feed download |
+| `DEPLOY_WEBHOOK_URL` | Optional | If set, the deploy job POSTs to it (e.g. a Render/Railway deploy hook) |
 
 ---
 
