@@ -127,5 +127,13 @@ jobs:
           echo "Deployment complete."
 
       - name: Trigger deployment webhook (optional)
-        if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
-        run: curl -fsSL -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}"
+        # The "secrets" context isn't readable from a step "if:" condition,
+        # so the empty check has to happen inside the shell script instead.
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DEPLOY_WEBHOOK_URL" ]; then
+            curl -fsSL -X POST "$DEPLOY_WEBHOOK_URL"
+          else
+            echo "No DEPLOY_WEBHOOK_URL secret configured; skipping webhook call."
+          fi
